@@ -1,8 +1,18 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
+export class ApiError extends Error {
+  constructor(message, { status, code, issues } = {}) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    this.issues = issues;
+  }
+}
+
 export function createApiClient(getToken) {
   async function request(method, path, body) {
-    const token = await getToken();
+    const token = await getToken?.();
     const res = await fetch(`${API_URL}${path}`, {
       method,
       headers: {
@@ -11,12 +21,20 @@ export function createApiClient(getToken) {
       },
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `HTTP ${res.status}`);
-    }
+
     if (res.status === 204) return null;
-    return res.json();
+
+    const text = await res.text();
+    const payload = text ? JSON.parse(text) : null;
+
+    if (!res.ok) {
+      throw new ApiError(payload?.error || `HTTP ${res.status}`, {
+        status: res.status,
+        code: payload?.code,
+        issues: payload?.issues,
+      });
+    }
+    return payload;
   }
 
   return {
