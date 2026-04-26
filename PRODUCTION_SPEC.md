@@ -2,8 +2,10 @@
 
 **Version:** 1.0  
 **Date:** April 2026  
-**Stack:** Next.js · Node.js · PostgreSQL (Neon) · Prisma · Turborepo  
+**Stack:** Next.js (JavaScript) · Node.js + Express (JavaScript) · PostgreSQL (Neon) · Prisma · Turborepo  
 **Deployment:** Vercel (both apps)
+
+> **Language note:** This build uses plain JavaScript (`.js` / `.jsx`) end-to-end. TypeScript migration is deferred to a future iteration.
 
 ---
 
@@ -118,22 +120,22 @@ NextAuth is excellent but it's tightly coupled to Next.js API routes. Since you 
 |---|---|---|
 | **Monorepo** | Turborepo | Shared packages, parallel builds, task caching |
 | **Frontend** | Next.js 14+ (App Router) | Best-in-class React framework, deploys to Vercel natively |
-| **Backend** | Node.js + Fastify | Fast, TypeScript-first, great for REST APIs |
+| **Backend** | Node.js + Express | Battle-tested, simple, huge ecosystem, easy to deploy |
 | **ORM** | Prisma | Type-safe queries, migrations, works perfectly with Neon |
 | **Database** | Neon PostgreSQL (serverless) | Serverless PG, scales to zero, generous free tier, branches for dev |
 | **Auth** | Clerk | See Section 3 |
 | **File Storage** | Vercel Blob | Same Vercel project, simple SDK, pay-per-use |
 | **Deployment** | Vercel | Both apps deploy from the same repo |
-| **Language** | TypeScript throughout | End-to-end type safety with shared types package |
+| **Language** | JavaScript (ESM/CJS) | Faster iteration for v1; TypeScript migration deferred |
 | **Styling** | Tailwind CSS | Utility-first, consistent with the MVP's design language |
 | **UI components** | shadcn/ui | Accessible, unstyled-first, easy to customise |
 
-### Why Fastify over Express
+### Why Express
 
-- Built-in TypeScript support (Express needs `@types/express`)
-- Schema validation with JSON Schema / Zod built in
-- 2x faster than Express in benchmarks (matters less at this scale, but still good)
-- Better plugin system for things like CORS, rate limiting, JWT verification
+- Already wired up and working in this project
+- Smallest API surface — no plugin system to learn
+- Trivial to host as a single Vercel serverless handler or on Railway
+- Validation handled by lightweight `zod` (or `joi`) inside the controller layer
 
 ---
 
@@ -142,76 +144,83 @@ NextAuth is excellent but it's tightly coupled to Next.js API routes. Since you 
 ```
 framework-studio/
 ├── apps/
-│   ├── web/                    # Next.js frontend
+│   ├── web/                    # Next.js frontend (JavaScript)
 │   │   ├── app/
 │   │   │   ├── (auth)/         # Login, onboarding pages
 │   │   │   ├── (dashboard)/    # Protected app pages
-│   │   │   │   ├── page.tsx            # Dashboard
-│   │   │   │   ├── team/page.tsx       # Studio Expenses
-│   │   │   │   ├── prospects/page.tsx  # Pipeline
-│   │   │   │   ├── estimates/page.tsx  # Estimates list
-│   │   │   │   ├── estimates/[id]/page.tsx  # Estimate detail
-│   │   │   │   └── settings/page.tsx   # Studio Profile
-│   │   │   ├── layout.tsx
-│   │   │   └── middleware.ts   # Clerk auth middleware
+│   │   │   │   ├── page.jsx            # Dashboard
+│   │   │   │   ├── team/page.jsx       # Studio Expenses
+│   │   │   │   ├── prospects/page.jsx  # Pipeline
+│   │   │   │   ├── estimates/page.jsx  # Estimates list
+│   │   │   │   ├── estimates/[id]/page.jsx  # Estimate detail
+│   │   │   │   └── settings/page.jsx   # Studio Profile
+│   │   │   ├── layout.jsx
+│   │   │   └── middleware.js   # Clerk auth middleware
 │   │   ├── components/
 │   │   │   ├── ui/             # shadcn/ui components
 │   │   │   ├── dashboard/      # Dashboard-specific components
 │   │   │   ├── estimates/      # Estimate builder components
 │   │   │   ├── prospects/      # Pipeline components
 │   │   │   └── shared/         # Nav, layout, modals
+│   │   ├── hooks/              # React Query hooks (useTeam, useProspects, …)
 │   │   ├── lib/
-│   │   │   ├── api.ts          # API client (fetch wrapper)
-│   │   │   └── calc.ts         # Calculation logic (shared with @studio/calc)
+│   │   │   ├── api.js          # API client (fetch wrapper)
+│   │   │   ├── queryClient.js  # React Query client config
+│   │   │   └── calc.js         # Calculation logic (mirrors api/src/lib/calc.js)
 │   │   ├── package.json
-│   │   └── next.config.ts
+│   │   └── next.config.js
 │   │
-│   └── api/                    # Node.js Fastify backend
+│   └── api/                    # Node.js Express backend (JavaScript)
+│       ├── server.js           # Express app entry — mounts middleware + routes
 │       ├── src/
-│       │   ├── index.ts        # Server entry point
-│       │   ├── plugins/
-│       │   │   ├── auth.ts     # Clerk JWT verification plugin
-│       │   │   ├── cors.ts
-│       │   │   └── db.ts       # Prisma client plugin
-│       │   └── routes/
-│       │       ├── team.ts
-│       │       ├── software.ts
-│       │       ├── overheads.ts
-│       │       ├── prospects.ts
-│       │       ├── estimates.ts
-│       │       ├── settings.ts
-│       │       └── dashboard.ts
+│       │   ├── middleware/
+│       │   │   ├── auth.js     # Clerk JWT verification + studio-membership check
+│       │   │   ├── errorHandler.js
+│       │   │   └── validate.js # zod schema validator
+│       │   ├── lib/
+│       │   │   ├── db.js       # Singleton PrismaClient
+│       │   │   ├── calc.js     # Calculation helpers
+│       │   │   └── serialize.js # BigInt-safe JSON serialiser
+│       │   ├── controllers/    # Request handlers (no Express imports)
+│       │   │   ├── settings.controller.js
+│       │   │   ├── team.controller.js
+│       │   │   ├── roles.controller.js
+│       │   │   ├── software.controller.js
+│       │   │   ├── overheads.controller.js
+│       │   │   ├── prospects.controller.js
+│       │   │   ├── estimates.controller.js
+│       │   │   └── dashboard.controller.js
+│       │   └── routes/         # Express routers — wire URL → controller
+│       │       ├── index.js    # Mounts every resource router
+│       │       ├── settings.routes.js
+│       │       ├── team.routes.js
+│       │       ├── roles.routes.js
+│       │       ├── software.routes.js
+│       │       ├── overheads.routes.js
+│       │       ├── prospects.routes.js
+│       │       ├── estimates.routes.js
+│       │       └── dashboard.routes.js
+│       ├── prisma/
+│       │   ├── schema.prisma
+│       │   └── seed.js
 │       └── package.json
 │
-├── packages/
-│   ├── database/               # Prisma schema + generated client
-│   │   ├── prisma/
-│   │   │   └── schema.prisma
-│   │   ├── src/
-│   │   │   └── index.ts        # Re-exports PrismaClient
-│   │   └── package.json
-│   │
-│   ├── calc/                   # Pure calculation functions (no DB, no React)
-│   │   ├── src/
-│   │   │   ├── estimate.ts     # calcEst, calcRetainer
-│   │   │   ├── tax.ts          # calcTax by entity type
-│   │   │   ├── partner.ts      # calcPartner, profit split
-│   │   │   ├── pricing.ts      # vaSignals → margin suggestion
-│   │   │   └── index.ts
-│   │   └── package.json
-│   │
-│   ├── types/                  # Shared TypeScript types
-│   │   ├── src/
-│   │   │   ├── estimate.ts
-│   │   │   ├── prospect.ts
-│   │   │   ├── team.ts
-│   │   │   └── index.ts
-│   │   └── package.json
-│   │
-│   └── config/                 # Shared configs
-│       ├── eslint-config/
-│       ├── typescript-config/
-│       └── tailwind-config/
+├── packages/                   # Created on demand when shared code emerges
+│   └── calc/                   # Pure calculation functions (no DB, no React)
+│       ├── src/
+│       │   ├── estimate.js     # calcEst, calcRetainer
+│       │   ├── tax.js          # calcTax by entity type
+│       │   ├── partner.js      # calcPartner, profit split
+│       │   ├── pricing.js      # vaSignals → margin suggestion
+│       │   └── index.js
+│       └── package.json
+│
+│   # Notes:
+│   # - `database` package is intentionally omitted; Prisma lives in apps/api/prisma
+│   #   and is the single source of truth. The web app does not import Prisma.
+│   # - `types` package is omitted because the project is JavaScript-only.
+│   # - `config` packages can be added later if shared ESLint/Tailwind configs
+│   #   become useful.
 │
 ├── turbo.json
 ├── package.json                # Root workspace
@@ -695,20 +704,22 @@ The `packages/calc` package contains all pure calculation functions — the same
 
 This avoids duplicating the logic or making an API round-trip on every input change in the estimate modal.
 
-```typescript
-// packages/calc/src/estimate.ts
-export function calcFixedEstimate(input: CalcInput): CalcResult {
+```javascript
+// packages/calc/src/estimate.js
+export function calcFixedEstimate(input) {
   // same logic as calcEst() in the MVP
 }
 
-export function calcTax(entity: EntityType, grossProfit: number): TaxResult {
+export function calcTax(entity, grossProfit) {
   // same slab/flat rate logic
 }
 
-export function calcPartnerSplit(netProfit: number, partners: Partner[]): PartnerResult[] {
+export function calcPartnerSplit(netProfit, partners) {
   // equity + exec/bdev premium logic
 }
 ```
+
+> **v1 note:** Until the estimate builder lives on the web side, the calc functions can stay inside `apps/api/src/lib/calc.js`. They get promoted to `packages/calc` only when the web app needs to import them for live recalculation in the estimate modal.
 
 ### State management
 
@@ -747,13 +758,12 @@ Vercel supports deploying multiple apps from the same Turborepo. You configure w
 - Build command: `cd ../.. && turbo build --filter=web`
 - Output: `.next`
 
-**Project 2 — API (Node.js)**
+**Project 2 — API (Node.js + Express)**
 - Root directory: `apps/api`
-- Build command: `cd ../.. && turbo build --filter=api`
-- Output: `dist`
-- Runtime: Node.js serverless functions on Vercel
+- Build command: none (plain JS) — Vercel runs `node server.js`
+- Runtime: Node.js serverless function (single Express handler) on Vercel
 
-> **Note:** Vercel supports Node.js backend services via serverless functions or, for persistent connections, via Vercel's newer "Fluid compute" runtime. For a Fastify app, configure it as a single serverless handler. Alternatively, if you find Vercel's Node.js hosting limiting for a traditional server, Railway is a good one-click alternative for the API only.
+> **Note:** Wrap the Express `app` with `serverless-http` (or export `module.exports = app`) so Vercel can mount it as a serverless function. If you outgrow serverless cold-starts, Railway is a good one-click alternative for the API only.
 
 ### Neon database branches
 
@@ -815,10 +825,10 @@ A seed file (`studio-seed-data.json`) is included alongside this document. To ge
 
 ### Migration script
 
-```typescript
-// scripts/migrate-from-mvp.ts
-import { PrismaClient } from '@studio/database'
-import data from './studio-seed-data.json'
+```javascript
+// apps/api/prisma/seed.js
+const { PrismaClient } = require('@prisma/client')
+const data = require('../../../studio-seed-data.json')
 
 const prisma = new PrismaClient()
 

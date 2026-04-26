@@ -2,6 +2,13 @@
 const WPM = 4.33; // weeks per month
 const GST_RATE = 0.18;
 
+const COMMISSION_PCT = { NONE: 0, REFERRAL_3: 3, SALES_PARTNER_7: 7, INTERNAL_1_5: 1.5 };
+
+function commissionPctFor(estimate) {
+  if (estimate.commissionType === "CUSTOM") return estimate.commissionCustomPct || 0;
+  return COMMISSION_PCT[estimate.commissionType] || 0;
+}
+
 // ─── Tax calculator ───────────────────────────────────────────────────────────
 function calcTax(entity, grossProfit) {
   if (grossProfit <= 0) return { base: 0, surcharge: 0, cess: 0, total: 0, effectiveRate: 0 };
@@ -37,7 +44,6 @@ function calcEstimate(input) {
   const months = durationWeeks / WPM;
   const isRetainer = input.type === "RETAINER";
 
-  // Team cost
   const memberBreakdown = (input.members || []).map((m) => {
     const dm = isRetainer ? 1 : (m.weeks || durationWeeks) / WPM;
     const cost = m.monthlyCost * (m.allocationPct / 100) * dm;
@@ -48,7 +54,6 @@ function calcEstimate(input) {
   });
   const teamCost = memberBreakdown.reduce((s, r) => s + r.cost, 0);
 
-  // Software cost
   const excludedSwIds = new Set(input.excludedSoftwareIds || []);
   const memberIds = new Set((input.members || []).map((m) => m.id));
   let softwareCost = 0;
@@ -59,7 +64,6 @@ function calcEstimate(input) {
     softwareCost += isRetainer ? monthly : monthly * months;
   }
 
-  // Overhead cost
   const excludedOhIds = new Set(input.excludedOverheadIds || []);
   let monthlyOverhead = 0;
   for (const oh of (input.overheads || [])) {
@@ -70,7 +74,6 @@ function calcEstimate(input) {
 
   const totalCost = teamCost + softwareCost + overheadCost;
 
-  // Revenue
   let revenue;
   if (isRetainer) {
     revenue = memberBreakdown.reduce((s, r) => s + (r.billingRate || 0), 0);
@@ -79,7 +82,6 @@ function calcEstimate(input) {
     revenue = margin >= 100 ? totalCost * 2 : totalCost / (1 - margin / 100);
   }
 
-  // Profit
   const commissionPct = input.commissionPct || 0;
   const commission = revenue * (commissionPct / 100);
   const grossProfit = revenue - commission - teamCost - softwareCost - overheadCost;
@@ -113,4 +115,33 @@ function calcPartnerSplit(netProfit, partners) {
   });
 }
 
-module.exports = { calcEstimate, calcTax, calcPartnerSplit, WPM, GST_RATE };
+// ─── Builder used by both estimate and dashboard controllers ──────────────────
+function buildCalcInputFromAggregates({ estimate, studio, allSoftware, allOverheads, now = new Date() }) {
+  return {
+    type: estimate.type,
+    durationWeeks: estimate.durationWeeks || 8,
+    margin: estimate.margin,
+    commissionPct: commissionPctFor(estimate),
+    members: estimate.allocations.map((a) => ({
+      id: a.memberId, name: a.member.name, monthlyCost: a.member.monthlyCost,
+      allocationPct: a.allocationPct, weeks: a.weeks, margin: a.margin,
+    })),
+    software: allSoftware.map((sw) => ({
+      id: sw.id, name: sw.name, costPerSeat: sw.costPerSeat,
+      isSharedLicence: sw.isSharedLicence, memberIds: sw.assignments.map((a) => a.memberId),
+    })),
+    overheads: allOverheads.map((oh) => ({
+      id: oh.id, label: oh.label, amount: oh.amount, isActive: !oh.endDate || oh.endDate > now,
+    })),
+    excludedSoftwareIds: estimate.exclusions.filter((e) => e.softwareId).map((e) => e.softwareId),
+    excludedOverheadIds: estimate.exclusions.filter((e) => e.overheadId).map((e) => e.overheadId),
+    entity: studio.entity,
+    gstRegistered: studio.gstRegistered,
+  };
+}
+
+module.exports = {
+  calcEstimate, calcTax, calcPartnerSplit,
+  buildCalcInputFromAggregates, commissionPctFor,
+  WPM, GST_RATE, COMMISSION_PCT,
+};
