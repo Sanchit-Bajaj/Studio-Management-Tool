@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Studio Management Tool",
+      "runtimeExecutable": "/usr/local/bin/node",
+      "runtimeArgs": ["/Users/sanchitbajaj/Documents/01_Work/07_Framework Studio/02_Tools/00_Studio Management Tool/.claude/serve.js"],
+      "port": 8080
+    },
+    {
+      "name": "design-commits",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "3033", "/Users/sanchitbajaj/Documents/01_Work/07_Framework Studio/02_Tools/00_Studio Management Tool"],
+      "port": 3033
+    },
+    {
+      "name": "design-commits-plugin",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "3034", "/Users/sanchitbajaj/Documents/01_Work/07_Framework Studio/02_Tools/01_Design Commits"],
+      "port": 3034
+    }
+  ]
+}

@@ -1,0 +1,231 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Single row — one studio only
+model Studio {
+  id           String     @id @default(cuid())
+  name         String
+  founderNames String     @default("")
+  email        String?
+  phone        String?
+  gstin        String?
+  entity       EntityType @default(LLP)
+  gstRegistered Boolean   @default(false)
+  workingDaysPerMonth Int @default(22)
+  workingHoursPerDay  Int @default(8)
+  clerkOrgId   String     @unique
+
+  pipelineProbLead        Int @default(20)
+  pipelineProbProposal    Int @default(50)
+  pipelineProbNegotiating Int @default(75)
+
+  fyReviewDismissedYear Int?
+
+  teamMembers   TeamMember[]
+  roles         Role[]
+  software      SoftwareTool[]
+  overheadItems OverheadItem[]
+  prospects     Prospect[]
+  estimates     Estimate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum EntityType {
+  LLP
+  SOLE_PROP
+  PARTNERSHIP
+  PVT_LTD
+  NON_PROFIT
+}
+
+model TeamMember {
+  id          String  @id @default(cuid())
+  studioId    String
+  studio      Studio  @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  name        String
+  roleId      String?
+  role        Role?   @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  department  Department @default(DESIGN)
+  monthlyCost Int
+  isActive    Boolean @default(true)
+  isPartner   Boolean @default(false)
+  equityPct   Float   @default(0)
+  execPremPct Float   @default(0)
+  bdevPremPct Float   @default(0)
+
+  softwareAssignments SoftwareAssignment[]
+  estimateAllocations EstimateAllocation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Role {
+  id         String     @id @default(cuid())
+  studioId   String
+  studio     Studio     @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  name       String
+  department Department @default(DESIGN)
+
+  teamMembers TeamMember[]
+
+  @@unique([studioId, name])
+}
+
+enum Department {
+  DESIGN
+  TECHNOLOGY
+  STRATEGY
+  MANAGEMENT
+  OPERATIONS
+  OTHER
+}
+
+model SoftwareTool {
+  id              String   @id @default(cuid())
+  studioId        String
+  studio          Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  name            String
+  costPerSeat     Int
+  isSharedLicence Boolean  @default(false)
+
+  assignments        SoftwareAssignment[]
+  estimateExclusions EstimateExclusion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SoftwareAssignment {
+  id         String       @id @default(cuid())
+  softwareId String
+  software   SoftwareTool @relation(fields: [softwareId], references: [id], onDelete: Cascade)
+  memberId   String
+  member     TeamMember   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([softwareId, memberId])
+}
+
+model OverheadItem {
+  id        String           @id @default(cuid())
+  studioId  String
+  studio    Studio           @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  category  OverheadCategory @default(MISC)
+  label     String
+  amount    Int
+  startDate DateTime?
+  endDate   DateTime?
+
+  estimateExclusions EstimateExclusion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum OverheadCategory {
+  RENT
+  UTILITIES
+  ACCOUNTANT
+  INTERNET
+  MISC
+  OTHER
+}
+
+model Prospect {
+  id          String        @id @default(cuid())
+  studioId    String
+  studio      Studio        @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  projectName String
+  clientName  String
+  contactEmail String?
+  notes       String?
+  stage       PipelineStage @default(LEAD)
+
+  vsUrgency    String @default("MEDIUM")
+  vsCompetitive String @default("MEDIUM")
+  vsClientSize  String @default("SMB")
+  vsValueScore  Float?
+  vsRevenueImpact BigInt?
+  vaPricingMode   String @default("COST_PLUS")
+
+  estimate Estimate?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PipelineStage {
+  LEAD
+  PROPOSAL_SENT
+  NEGOTIATING
+  WON
+  LOST
+}
+
+model Estimate {
+  id                  String         @id @default(cuid())
+  studioId            String
+  studio              Studio         @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  name                String
+  type                EstimateType   @default(FIXED)
+  durationWeeks       Int?
+  margin              Float?
+  commissionType      CommissionType @default(NONE)
+  commissionCustomPct Float?
+  contractValue       BigInt?
+  executionLeadId     String?
+
+  prospectId String?   @unique
+  prospect   Prospect? @relation(fields: [prospectId], references: [id], onDelete: SetNull)
+
+  allocations EstimateAllocation[]
+  exclusions  EstimateExclusion[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum EstimateType {
+  FIXED
+  RETAINER
+}
+
+enum CommissionType {
+  NONE
+  REFERRAL_3
+  SALES_PARTNER_7
+  INTERNAL_1_5
+  CUSTOM
+}
+
+model EstimateAllocation {
+  id            String     @id @default(cuid())
+  estimateId    String
+  estimate      Estimate   @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  memberId      String
+  member        TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  allocationPct Int
+  weeks         Int?
+  margin        Float?
+
+  @@unique([estimateId, memberId])
+}
+
+model EstimateExclusion {
+  id         String        @id @default(cuid())
+  estimateId String
+  estimate   Estimate      @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  softwareId String?
+  software   SoftwareTool? @relation(fields: [softwareId], references: [id], onDelete: Cascade)
+  overheadId String?
+  overhead   OverheadItem? @relation(fields: [overheadId], references: [id], onDelete: Cascade)
+}

@@ -1,0 +1,135 @@
+{
+  "_note": "Reconstructed from QA seed session — verify against localStorage at http://localhost:8080 (DevTools > Console > copy(localStorage.getItem('fsv7')))",
+  "user": {
+    "name": "Sanchit Bajaj",
+    "studio": "Framework Studio"
+  },
+  "settings": {
+    "name": "Framework Studio",
+    "founder": "Sanchit & Arjun",
+    "email": "hello@frameworkstudio.in",
+    "phone": "9876543210",
+    "gstin": "29ABCDE1234F1Z5",
+    "entity": "llp",
+    "gst": "yes",
+    "wdays": 22,
+    "whours": 6,
+    "overheadItems": [
+      { "id": "oh1", "category": "rent", "label": "Mumbai Office", "amount": 45000, "startDate": "2024-04-01", "endDate": "" },
+      { "id": "oh2", "category": "utilities", "label": "Electricity & Internet", "amount": 8000, "startDate": "2024-04-01", "endDate": "" },
+      { "id": "oh3", "category": "accountant", "label": "CA Retainer", "amount": 5000, "startDate": "2024-04-01", "endDate": "" },
+      { "id": "oh4", "category": "misc", "label": "Old Coworking", "amount": 12000, "startDate": "2024-04-01", "endDate": "2024-03-31" }
+    ],
+    "pipelineProb": {
+      "Lead": 20,
+      "Proposal Sent": 50,
+      "Negotiating": 75,
+      "Won": 100
+    },
+    "dashBlockOrder": ["revenue", "runway", "partner", "revenueShare", "software"],
+    "kpiOrder": ["won", "netprofit", "burn", "runway"],
+    "fyReviewDismissed": null
+  },
+  "team": [
+    {
+      "id": "m1", "name": "Sanchit Bajaj", "role": "Brand Strategist", "exp": "8–12 yrs",
+      "cost": 120000, "active": true, "isPartner": true, "equityPct": 50,
+      "execPremPct": 0, "bdevPremPct": 0, "tools": ["sw1"]
+    },
+    {
+      "id": "m2", "name": "Arjun Mehta", "role": "Senior UI Designer", "exp": "5–8 yrs",
+      "cost": 90000, "active": true, "isPartner": true, "equityPct": 50,
+      "execPremPct": 0, "bdevPremPct": 0, "tools": ["sw1", "sw3"]
+    },
+    {
+      "id": "m3", "name": "Priya Sharma", "role": "Developer", "exp": "3–5 yrs",
+      "cost": 75000, "active": true, "isPartner": false, "equityPct": 0,
+      "execPremPct": 0, "bdevPremPct": 0, "tools": ["sw3"]
+    }
+  ],
+  "roles": [
+    { "id": "r1", "name": "Senior UI Designer", "dept": "Design" },
+    { "id": "r2", "name": "Developer", "dept": "Technology" },
+    { "id": "r3", "name": "Brand Strategist", "dept": "Strategy" },
+    { "id": "r4", "name": "Project Manager", "dept": "Management" }
+  ],
+  "software": [
+    { "id": "sw1", "name": "Figma", "cost": 1500, "startDate": "2023-06-01", "users": ["m1", "m2"], "wholeTeam": false },
+    { "id": "sw2", "name": "Notion", "cost": 800, "startDate": "2023-06-01", "users": [], "wholeTeam": true },
+    { "id": "sw3", "name": "Linear", "cost": 600, "startDate": "2024-01-01", "users": ["m2", "m3"], "wholeTeam": false }
+  ],
+  "prospects": [
+    {
+      "id": "p1", "project": "Brand Identity System", "client": "Leafmark", "contact": "Rohan Verma",
+      "email": "rohan@leafmark.co", "phone": "9123456780", "url": "leafmark.co",
+      "domain": "D2C / Consumer", "stage": "Won", "estimateId": "e1", "created": "2025-01-01",
+      "valueSignals": {
+        "mode": "matrix", "complexity": 2, "impact": 2, "urgency": "standard",
+        "competitive": "shortlisted", "clientSize": "funded", "revenueImpact": null
+      }
+    },
+    {
+      "id": "p2", "project": "SaaS Dashboard Redesign", "client": "DataPulse", "contact": "Ananya Singh",
+      "email": "ananya@datapulse.io", "phone": "9234567891", "url": "datapulse.io",
+      "domain": "SaaS / B2B", "stage": "Negotiating", "estimateId": "e2", "created": "2025-02-10",
+      "valueSignals": {
+        "mode": "revenue", "complexity": 3, "impact": 3, "urgency": "expedited",
+        "competitive": "sole", "clientSize": "enterprise", "revenueImpact": 12000000
+      }
+    },
+    {
+      "id": "p3", "project": "E-commerce App", "client": "StyleNova", "contact": "Meera Kapoor",
+      "email": "meera@stylenova.in", "phone": "9345678902", "url": "stylenova.in",
+      "domain": "E-commerce", "stage": "Proposal Sent", "estimateId": "e3", "created": "2025-03-01",
+      "valueSignals": {
+        "mode": "matrix", "complexity": 2, "impact": 2, "urgency": "standard",
+        "competitive": "shortlisted", "clientSize": "funded", "revenueImpact": null
+      }
+    },
+    {
+      "id": "p4", "project": "HealthTech Branding", "client": "MedCore", "contact": "Vikram Nair",
+      "email": "vikram@medcore.health", "phone": "9456789013", "url": "medcore.health",
+      "domain": "Healthtech", "stage": "Lead", "estimateId": null, "created": "2025-03-15",
+      "valueSignals": {
+        "mode": "matrix", "complexity": 1, "impact": 2, "urgency": "standard",
+        "competitive": "pitch", "clientSize": "funded", "revenueImpact": null
+      }
+    }
+  ],
+  "estimates": [
+    {
+      "id": "e1", "name": "Leafmark — Brand Identity", "type": "fixed", "weeks": 10, "margin": 55,
+      "teamAlloc": [
+        { "memberId": "m1", "alloc": 80, "weeks": 10, "margin": 55 },
+        { "memberId": "m2", "alloc": 100, "weeks": 10, "margin": 55 }
+      ],
+      "excludedSw": [], "excludedOH": [],
+      "commission": { "type": "3", "customPct": 0 },
+      "financials": { "contract": 850000, "execLead": "" },
+      "created": "2025-01-01"
+    },
+    {
+      "id": "e2", "name": "DataPulse — SaaS Redesign", "type": "fixed", "weeks": 16, "margin": 60,
+      "teamAlloc": [
+        { "memberId": "m1", "alloc": 60, "weeks": 16, "margin": 60 },
+        { "memberId": "m2", "alloc": 100, "weeks": 16, "margin": 60 },
+        { "memberId": "m3", "alloc": 80, "weeks": 16, "margin": 60 }
+      ],
+      "excludedSw": [], "excludedOH": [],
+      "commission": { "type": "0", "customPct": 0 },
+      "financials": { "contract": 0, "execLead": "" },
+      "created": "2025-02-10"
+    },
+    {
+      "id": "e3", "name": "StyleNova — E-commerce App", "type": "retainer", "weeks": 8, "margin": null,
+      "teamAlloc": [
+        { "memberId": "m2", "alloc": 50, "weeks": 8, "margin": 35 },
+        { "memberId": "m3", "alloc": 100, "weeks": 8, "margin": 30 }
+      ],
+      "excludedSw": [], "excludedOH": [],
+      "commission": { "type": "0", "customPct": 0 },
+      "financials": { "contract": 0, "execLead": "" },
+      "created": "2025-03-01"
+    }
+  ]
+}
