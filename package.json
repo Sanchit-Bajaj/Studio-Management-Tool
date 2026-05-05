@@ -10,6 +10,7 @@
     "db:seed": "npm run db:seed --workspace=apps/api",
     "db:studio": "npm run db:studio --workspace=apps/api"
   },
+  "packageManager": "npm@11.9.0",
   "devDependencies": {
     "turbo": "^2.0.0"
   },

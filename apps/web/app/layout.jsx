@@ -1,4 +1,4 @@
-import { ClerkProvider } from "@clerk/nextjs";
+import AppSessionProvider from "./session-provider";
 import "./globals.css";
 
 export const metadata = { title: "Framework Studio", description: "Studio Management Tool" };
@@ -6,7 +6,9 @@ export const metadata = { title: "Framework Studio", description: "Studio Manage
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{<ClerkProvider>{children}</ClerkProvider>}</body>
+      <body>
+        <AppSessionProvider>{children}</AppSessionProvider>
+      </body>
     </html>
   );
 }

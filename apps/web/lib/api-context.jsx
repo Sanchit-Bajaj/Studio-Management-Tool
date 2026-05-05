@@ -1,18 +1,18 @@
 "use client";
 import * as React from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useSession } from "next-auth/react";
 import { createApiClient } from "./api";
 
 const ApiContext = React.createContext(null);
 
 export function ApiProvider({ children }) {
-  const { getToken, isLoaded } = useAuth();
+  const { data: session, status } = useSession();
   const client = React.useMemo(
-    () => createApiClient(() => getToken({ template: undefined })),
-    [getToken],
+    () => createApiClient(() => Promise.resolve(session?.apiToken ?? null)),
+    [session?.apiToken],
   );
   return (
-    <ApiContext.Provider value={{ api: client, isAuthReady: isLoaded }}>
+    <ApiContext.Provider value={{ api: client, isAuthReady: status !== "loading" }}>
       {children}
     </ApiContext.Provider>
   );

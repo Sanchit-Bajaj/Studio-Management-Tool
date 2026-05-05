@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
-import { LayoutDashboard, Users, Briefcase, Settings, FolderKanban } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
+import { LayoutDashboard, Users, Briefcase, Settings, FolderKanban, LogOut } from "lucide-react";
 
 const links = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -14,6 +14,7 @@ const links = [
 
 export default function Nav() {
   const pathname = usePathname();
+  const { data: session } = useSession();
   return (
     <nav className="w-56 shrink-0 bg-white border-r border-[var(--border)] flex flex-col h-full">
       <div className="px-5 py-5 border-b border-[var(--border)]">
@@ -33,8 +34,17 @@ export default function Nav() {
           );
         })}
       </div>
-      <div className="px-5 py-4 border-t border-[var(--border)]">
-        <UserButton afterSignOutUrl="/sign-in" />
+      <div className="px-5 py-4 border-t border-[var(--border)] space-y-2">
+        {session?.user && (
+          <p className="text-xs text-[var(--muted)] truncate">{session.user.email}</p>
+        )}
+        <button
+          onClick={() => signOut({ callbackUrl: "/sign-in" })}
+          className="flex items-center gap-2 text-xs text-[var(--muted)] hover:text-[var(--ink)] transition-colors"
+        >
+          <LogOut size={14} />
+          Sign out
+        </button>
       </div>
     </nav>
   );
